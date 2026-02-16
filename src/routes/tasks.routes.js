@@ -1,26 +1,12 @@
 import express from 'express'
 const router = express.Router()
 
-// base de datos temporal
-const tasks = [
-    {
-        id: 1,
-        title: 'Aprender Express',
-        completed: false,
-        createdAt: new Date()
-    },
-    {
-        id: 2,
-        title: 'Crear mi primera API',
-        completed: false,
-        createdAt: new Date()
-    }
-]
-
-let tasksId = 3
+import Task from '../models/task.model.js'
 
 // GET /api/tasks - obtener todas las tareas
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+    const tasks = await Task.find({})
+
     res.json({
         success: true,
         count: tasks.length,

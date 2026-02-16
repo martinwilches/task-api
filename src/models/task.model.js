@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+const { Schema } = mongoose
 
 const taskSchema = new Schema({
     title: {
@@ -27,4 +28,6 @@ const taskSchema = new Schema({
     timestamp: true // agregar los campos createdAt y updatedAt automáticamente
 })
 
-export default Task = mongoose.model('Task', taskSchema)
+const Task = mongoose.model('Task', taskSchema)
+
+export default Task
