@@ -2,11 +2,18 @@
 
 ## VERSION 1
 
-### Librerias
+### Librerías
 
 ```bash
 npm i express
 npm i --save-dev nodemon # reiniciar servidor automaticamente
-dotenv # acceder a variables de entorno
 ```
 
+## VERSION 2
+
+### Librerías
+
+```bash
+npm i mongoose
+npm i dotenv # acceder a variables de entorno
+```
