@@ -5,18 +5,47 @@ import Task from '../models/task.model.js'
 
 // GET /api/tasks - obtener todas las tareas
 router.get('/', async (req, res) => {
-    const tasks = await Task.find({})
+    try {
+        const { completed, priority, sort } = req.query
 
-    res.json({
-        success: true,
-        count: tasks.length,
-        data: tasks
-    })
+        const filter = {}
+        if (completed !== undefined) {
+            filter.completed = completed === true
+        }
+
+        if (priority) {
+            filter.priority = priority
+        }
+
+        // ordenamiento
+        const sortOptions = {}
+        if (sort) {
+            const [ field, order] = sort.split(':')
+            sortOptions[field] = order == 'desc' ? -1 : 1
+        } else {
+            sortOptions.createdAt = -1 // por defecto ordenar mas recientes primero
+        }
+
+        const tasks = await Task.find(filter).sort(sortOptions)
+
+        res.json({
+            success: true,
+            count: tasks.length,
+            data: tasks
+        })
+    } catch(error) {
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener las tareas'
+        })
+    }
 })
 
 // GET /api/tasks/:id - obtener una tarea por id
-router.get('/:id', (req, res) => {
-    const task = tasks.find(task => task.id === parseInt(req.params.id))
+router.get('/:id', async (req, res) => {
+    const id = req.params.id
+
+    const task = await Task.findById(id)
 
     if (!task) {
         return res.status(404).json({
@@ -32,29 +61,29 @@ router.get('/:id', (req, res) => {
 })
 
 // POST /api/tasks - crear una nueva tarea
-router.post('/', (req, res) => {
-    const { title } = req.body
+router.post('/', async (req, res) => {
+    try {
+        const task = await Task.create(req.body)
 
-    if (!title) {
-        return res.status(400).json({
+        res.status(201).json({
+            success: true,
+            data: task
+        })
+    } catch(error) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.values).map(err => err.message)
+
+            return res.status(400).json({
+                success: false,
+                error: messages
+            })
+        }
+
+        res.status(500).json({
             success: false,
-            message: 'El titulo es requerido'
+            error: 'Error al crear la tarea'
         })
     }
-
-    const newTask = {
-        id: tasksId++,
-        title,
-        completed: false,
-        createdAt: new Date()
-    }
-
-    tasks.push(newTask)
-
-    res.status(201).json({
-        success: true,
-        data: newTask
-    })
 })
 
 // PUT /api/tasks/:id - actualizar una tarea

@@ -19,13 +19,14 @@ const taskSchema = new Schema({
     },
     priority: {
         type: String,
-        enum: ['low', 'medium', 'high']
+        enum: ['low', 'medium', 'high'],
+        default: 'low'
     },
     dueDate: {
         type: Date
     }
 }, {
-    timestamp: true // agregar los campos createdAt y updatedAt automáticamente
+    timestamps: true // agregar los campos createdAt y updatedAt automáticamente
 })
 
 const Task = mongoose.model('Task', taskSchema)
