@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+
 const { Schema } = mongoose
 
 const taskSchema = new Schema({
@@ -24,10 +25,18 @@ const taskSchema = new Schema({
     },
     dueDate: {
         type: Date
+    },
+    user: { // asociar la task con un user
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: true // agregar los campos createdAt y updatedAt automáticamente
 })
+
+// indice para mejorar búsqueda por usuario
+taskSchema.index({ user: 1, createdAt: -1 })
 
 const Task = mongoose.model('Task', taskSchema)
 
