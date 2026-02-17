@@ -43,21 +43,33 @@ router.get('/', async (req, res) => {
 
 // GET /api/tasks/:id - obtener una tarea por id
 router.get('/:id', async (req, res) => {
-    const id = req.params.id
+    try {
+        const task = await Task.findById(req.params.id)
 
-    const task = await Task.findById(id)
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            })
+        }
 
-    if (!task) {
-        return res.status(404).json({
+        res.json({
+            success: true,
+            data: task
+        })
+    } catch(error) {
+        if (error.kind === 'ObjectId') {
+            return res.status(400).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            })
+        }
+
+        res.status(500).json({
             success: false,
-            message: 'Tarea no encontrada'
+            error: 'Error al obtener la tarea'
         })
     }
-
-    res.json({
-        success: true,
-        data: task
-    })
 })
 
 // POST /api/tasks - crear una nueva tarea
@@ -71,7 +83,7 @@ router.post('/', async (req, res) => {
         })
     } catch(error) {
         if (error.name === 'ValidationError') {
-            const messages = Object.values(error.values).map(err => err.message)
+            const messages = Object.values(error.errors).map(err => err.message)
 
             return res.status(400).json({
                 success: false,
@@ -87,45 +99,79 @@ router.post('/', async (req, res) => {
 })
 
 // PUT /api/tasks/:id - actualizar una tarea
-router.put('/:id', (req, res) => {
-    const task = tasks.find(task => task.id === parseInt(req.params.id))
+router.put('/:id', async (req, res) => {
+    try {
+        const task = await Task.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true, // retornar el documento actualizado
+                runValidators: true // ejecutar las validaciones del schema
+            }
+        )
 
-    if (!task) {
-        return res.status(404).json({
-            success: false,
-            message: 'Tarea no encontrada'
+        if (!task) {
+            return res.status(400).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            })
+        }
+
+        res.json({
+            success: true,
+            data: task
+        })
+    } catch(error) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message)
+
+            return res.status(400).json({
+                success: false,
+                error: messages
+            })
+        } else if (error.kind === 'ObjectId') {
+            return res.status(400).json({
+                success: false,
+                error: 'No se encontró la tarea'
+            })
+        }
+
+        res.status(500).json({
+            success: true,
+            error: 'Error al actualizar la tarea'
         })
     }
-
-    const { title, completed } = req.body
-
-    if (title) task.title = title
-    if (completed) task.completed = completed
-    task.updatedAt = new Date()
-
-    res.json({
-        success: true,
-        data: task
-    })
 })
 
 // DELETE /api/tasks/:id - eliminar una tarea
-router.delete('/:id', (req, res) => {
-    const taskId = tasks.findIndex(task => task.id === parseInt(req.params.id))
+router.delete('/:id', async (req, res) => {
+    try {
+        const task = await Task.findByIdAndDelete(req.params.id)
 
-    if (taskId === -1) {
-        return res.status(404).json({
+        if (!task) {
+            return res.status(400).json({
+                success: false,
+                error: 'No se encontró la tarea'
+            })
+        }
+
+        res.json({
+            success: true,
+            message: 'Tarea eliminada'
+        })
+    } catch(error) {
+        if (error.kind === 'ObjectId') {
+            return res.status(400).json({
+                success: false,
+                error: 'No se encontró la tarea'
+            })
+        }
+
+        res.status(500).json({
             success: false,
-            message: 'Tarea no encontrada'
+            error: 'Error al eliminar la tarea'
         })
     }
-
-    tasks.splice(taskId, 1)
-
-    res.json({
-        success: true,
-        message: 'Tarea eliminada correctamente'
-    })
 })
 
 export default router
