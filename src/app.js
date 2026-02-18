@@ -1,5 +1,7 @@
 import express from 'express'
+
 import tasksRouter from './routes/tasks.routes.js'
+import authRouter from './routes/auth.routes.js'
 
 const app = express()
 
@@ -16,6 +18,7 @@ app.get('/', (req, res) => {
 
 // rutas de tareas
 app.use('/api/tasks', tasksRouter)
+app.use('/api/auth', authRouter)
 
 // middleware para rutas no encontradas
 app.use((req, res) => {
