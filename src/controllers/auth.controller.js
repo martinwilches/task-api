@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs'
+
 import User from '../models/user.model.js'
 
 // helper para enviar token en cookie
@@ -26,7 +28,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
 }
 
 // @desc    Registrar usuario
-// @route   /api/auth/register
+// @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res) => {
     try {
@@ -60,6 +62,51 @@ export const register = async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al registrar el usuario'
+        })
+    }
+}
+
+// @desc    Login usuario
+// @route   POST /api/auth/login
+// @access  Public
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body
+
+        // validar email y password
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'El email y la contraseña son requeridos'
+            })
+        }
+
+        // buscar usuario
+        const user = await User.findOne({email}).select('+password') // incluir la contraseña en el resultado de la consulta
+
+        // validar si el usuario existe
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                error: 'Credenciales invalidas'
+            })
+        }
+
+        // comparar contraseñas
+        const isMatch = await user.comparePassword(password)
+
+        if (!isMatch) {
+            return res.status(403).json({
+                success: false,
+                error: 'Credenciales invalidas'
+            })
+        }
+
+        sendTokenResponse(user, 200, res)
+    } catch(error) {
+        res.status(500).json({
+            success: true,
+            error: 'Error al iniciar sesión'
         })
     }
 }

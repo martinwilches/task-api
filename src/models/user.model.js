@@ -49,7 +49,7 @@ const userSchema = new Schema({
 })
 
 // encriptar contraseña antes de guardar
-userSchema.pre('password', async function(next) {
+userSchema.pre('save', async function(next) {
     if (!this.isModified('password')) next()
 
     const salt = await bcrypt.genSalt(10)
